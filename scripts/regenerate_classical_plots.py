@@ -60,7 +60,7 @@ def main() -> None:
                 plot_mgr.plot_roc_curves(metrics["fpr"], metrics["tpr"], filename=f"roc_{mname}.png")
         if rows:
             plot_mgr.plot_metric_comparison(pd.DataFrame(rows), filename="model_comparison.png")
-    print("Plots regenerated under outputs/plots/classical_ml/")
+    print("Plots regenerated under results/plots/classical_ml/")
 
 
 if __name__ == "__main__":

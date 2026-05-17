@@ -1,10 +1,13 @@
 #!/usr/bin/env python
-"""Generate all Jupyter notebooks for the university project."""
+"""Generate Jupyter notebooks with full theory text for Tasks 2-5."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+NB = ROOT / "notebooks"
 
 
 def md_cell(source: str) -> dict:
@@ -36,64 +39,68 @@ def notebook(cells: list) -> dict:
 def save(nb: dict, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(nb, f, indent=1)
+        json.dump(nb, f, indent=1, ensure_ascii=False)
 
 
-ROOT = Path(__file__).resolve().parents[1]
-NB = ROOT / "notebooks"
-
-# 01 - Theory
-save(
-    notebook(
-        [
-            md_cell("# 01 — Theoretical Foundations of Classical ML\n\nThis notebook documents algorithm theory, comparison tables, and bias-variance analysis."),
-            code_cell(
-                """import sys
+SETUP = """import sys
 from pathlib import Path
 ROOT = Path.cwd().parent if Path.cwd().name == 'notebooks' else Path.cwd()
 sys.path.insert(0, str(ROOT))
-
-import pandas as pd
-from IPython.display import Markdown, display
-from src.classical_ml.theory import ALGORITHM_THEORY, get_comparison_table
-
-for name, info in ALGORITHM_THEORY.items():
-    display(Markdown(f\"## {name}\\n- **Intuition:** {info['intuition']}\\n- **Decision rule:** {info['decision_rule']}\\n- **Training:** {info['training_complexity']}\\n- **Inference:** {info['inference_complexity']}\"))
-
-df = pd.DataFrame(get_comparison_table())
-display(df)
-df.to_csv(ROOT / 'outputs/metrics/algorithm_comparison_notebook.csv', index=False)
 """
-            ),
-            md_cell("See `docs/theory/logistic_regression_derivation.md` and `docs/theory/manual_knn_example.md` for full mathematical derivations."),
-        ]
-    ),
-    NB / "01_theoretical_foundations.ipynb",
-)
 
-# 02 - Classical ML
+# Task 2 notebook — expanded theory + pipeline
 save(
     notebook(
         [
-            md_cell("# 02 — Classical ML Pipeline\n\nDatasets: **Wine Quality (UCI)** and **Covertype (multiclass, ≥1000 samples)**."),
-            code_cell(
-                """import sys
-from pathlib import Path
-ROOT = Path.cwd().parent if Path.cwd().name == 'notebooks' else Path.cwd()
-sys.path.insert(0, str(ROOT))
+            md_cell(
+                """# Задача 2. Классический конвейер машинного обучения
 
-# Run full pipeline (use --quick in terminal for faster execution)
-!python scripts/run_classical_ml.py --quick
+## Цель
+Реализовать полный pipeline: предобработка, обучение 4+ классификаторов, GridSearchCV/RandomizedSearchCV, метрики, визуализации.
+
+## Датасеты
+- **Wine Quality (UCI)** — табличные признаки, мультиклассовая целевая переменная качества.
+- **Covertype** — ≥15000 образцов, 7 классов лесного покрова.
+
+## Предобработка
+1. `SimpleImputer` (медиана / мода)
+2. `StandardScaler` для числовых признаков
+3. `OneHotEncoder` для категориальных
+4. Объединение через `ColumnTransformer` и `Pipeline`
+5. Стратифицированное разбиение **70% / 15% / 15%**
+
+## Модели
+| Модель | Поиск гиперпараметров | Особенности |
+|--------|----------------------|-------------|
+| Logistic Regression | GridSearchCV | Вероятности, L2 |
+| Random Forest | GridSearchCV | Нелинейность, важность признаков |
+| SVM | RandomizedSearchCV | RBF/linear kernel |
+| k-NN | GridSearchCV | Требует масштабирования |
+
+## Метрики
+Accuracy, Precision, Recall, F1 (weighted), ROC-AUC (OvR), confusion matrix, CV mean±std.
+
+## Переобучение vs недообучение
+- **Недообучение:** высокие ошибки на train и val (высокое смещение).
+- **Переобучение:** низкая train error, высокая val error (высокая дисперсия).
+- **Регуляризация:** `C`, `max_depth`, `k`, `class_weight='balanced'`.
 """
             ),
+            code_cell(SETUP + "!python scripts/run_classical_ml.py --quick"),
             code_cell(
-                """import pandas as pd
+                SETUP
+                + """import pandas as pd
 from IPython.display import display, Image
 
-metrics_wine = pd.read_csv(ROOT / 'outputs/metrics/wine_quality_comparison.csv')
-metrics_cov = pd.read_csv(ROOT / 'outputs/metrics/covertype_comparison.csv')
-display(metrics_wine, metrics_cov)
-display(Image(filename=str(ROOT / 'outputs/plots/classical_ml/covertype/model_comparison.png')))
+for name in ['wine_quality', 'covertype']:
+    p = ROOT / 'results/metrics' / f'{name}_comparison.csv'
+    if p.exists():
+        print('===', name, '===')
+        display(pd.read_csv(p))
+
+img = ROOT / 'results/plots/classical_ml/covertype/model_comparison.png'
+if img.exists():
+    display(Image(filename=str(img)))
 """
             ),
         ]
@@ -101,20 +108,38 @@ display(Image(filename=str(ROOT / 'outputs/plots/classical_ml/covertype/model_co
     NB / "02_classical_ml_pipeline.ipynb",
 )
 
-# 03 - Dimensionality
 save(
     notebook(
         [
-            md_cell("# 03 — Dimensionality Reduction\n\nPCA, t-SNE, UMAP, LDA with 2D visualizations and PCA 95% retraining."),
-            code_cell("!python scripts/run_dimensionality.py --quick"),
+            md_cell(
+                """# Задача 3. Снижение размерности
+
+## PCA
+Линейная проекция на главные компоненты — собственные векторы ковариационной матрицы. Критерий 95% объяснённой дисперсии выбирает размерность сжатия.
+
+## t-SNE
+Сохраняет локальную структуру попарных расстояний; хорош для визуализации, плох для production features без переобучения embedding.
+
+## UMAP
+Графовый метод на основе многообразий; быстрее t-SNE на больших n, лучше сохраняет глобальную топологию.
+
+## LDA
+Супервизорная линейная проекция, максимизирующая межклассовую дисперсию Фишера.
+
+## Эксперимент
+Переобучение Random Forest на PCA-признаках (95% variance) и сравнение с полным набором признаков.
+"""
+            ),
+            code_cell(SETUP + "!python scripts/run_dimensionality.py --quick"),
             code_cell(
-                """import json
-from pathlib import Path
+                SETUP
+                + """import json
 from IPython.display import Image, display
-with open(ROOT / 'outputs/metrics/pca_comparison.json') as f:
+
+with open(ROOT / 'results/metrics/pca_comparison.json', encoding='utf-8') as f:
     display(json.load(f))
-for img in ['pca_explained_variance.png','tsne_2d.png','umap_2d.png','lda_2d.png','pca_2d.png']:
-    p = ROOT / 'outputs/plots/dimensionality' / img
+for img in ['pca_explained_variance.png','tsne_2d.png','umap_2d.png','lda_2d.png']:
+    p = ROOT / 'results/plots/dimensionality' / img
     if p.exists():
         display(Image(filename=str(p)))
 """
@@ -124,23 +149,34 @@ for img in ['pca_explained_variance.png','tsne_2d.png','umap_2d.png','lda_2d.png
     NB / "03_dimensionality_reduction.ipynb",
 )
 
-# 04 - MLP
 save(
     notebook(
         [
             md_cell(
-                """# 04 — MLP on Fashion-MNIST
+                """# Задача 4. MLP (Fashion-MNIST)
 
-## Theoretical Notes
-- **Vanishing gradients:** Sigmoid/tanh saturate; gradients → 0 in deep nets. ReLU mitigates.
-- **Batch normalization:** Normalizes activations; stabilizes training, allows higher LR.
-- **Learning rate:** Too high → divergence; too low → slow convergence. Schedulers adapt LR.
+## Архитектура
+Вход 784 → скрытые 512-256-128 → BatchNorm → Dropout 0.3 → Softmax(10).
+
+## Оптимизаторы
+- **SGD** + momentum — классический, чувствителен к lr
+- **Adam** — адаптивные шаги
+- **RMSprop** — скользящее среднее квадратов градиентов
+
+## Теория
+**Исчезающие градиенты:** насыщение sigmoid/tanh. **BatchNorm:** стабилизация активаций. **LR scheduling:** ReduceLROnPlateau при плато val_loss.
+
+## Регуляризация
+Early stopping, dropout, (опционально) L2 на весах.
 """
             ),
-            code_cell("!python scripts/run_mlp.py --quick"),
+            code_cell(SETUP + "!python scripts/run_mlp.py --quick"),
             code_cell(
-                """from IPython.display import Image, display
-display(Image(filename=str(ROOT / 'outputs/plots/mlp/optimizer_comparison.png')))
+                SETUP
+                + """from IPython.display import Image, display
+p = ROOT / 'results/plots/mlp/optimizer_comparison.png'
+if p.exists():
+    display(Image(filename=str(p)))
 """
             ),
         ]
@@ -148,42 +184,45 @@ display(Image(filename=str(ROOT / 'outputs/plots/mlp/optimizer_comparison.png'))
     NB / "04_mlp_experiments.ipynb",
 )
 
-# 05 - CNN
 save(
     notebook(
         [
-            md_cell("# 05 — CNN from Scratch (CIFAR-10)\n\n≥3 conv blocks, augmentation, 30 epochs (use `--quick` for smoke test)."),
-            code_cell("!python scripts/run_cnn.py --quick"),
+            md_cell(
+                """# Задача 5. CNN (CIFAR-10) + Transfer Learning (ResNet18)
+
+## CNN с нуля
+3 conv-блока (Conv2D, BatchNorm, ReLU, MaxPool, Dropout), аугментация, 30 эпох, Adam, checkpoints.
+
+## Transfer learning
+1. Заморозить backbone ImageNet
+2. Обучить голову классификатора
+3. Разморозить и fine-tune с меньшим lr
+
+## Сравнение
+CNN scratch — меньше параметров, ниже accuracy при малых эпохах.
+ResNet18 — выше accuracy, больше параметров, дольше обучение.
+"""
+            ),
+            code_cell(SETUP + "!python scripts/run_cnn.py --quick"),
+            code_cell(SETUP + "!python scripts/run_transfer.py --quick"),
             code_cell(
-                """import json
+                SETUP
+                + """import json
 from IPython.display import Image, display
-with open(ROOT / 'outputs/metrics/cnn_metrics.json') as f:
-    print(json.load(f))
-display(Image(filename=str(ROOT / 'outputs/plots/cnn/cnn_training.png')))
-display(Image(filename=str(ROOT / 'outputs/plots/cnn/cnn_confusion_matrix.png')))
+
+for f in ['cnn_metrics.json', 'transfer_learning_metrics.json']:
+    p = ROOT / 'results/metrics' / f
+    if p.exists():
+        print(f, json.load(open(p, encoding='utf-8')))
+for img in ['cnn/cnn_training.png', 'cnn/cnn_confusion_matrix.png']:
+    p = ROOT / 'results/plots' / img
+    if p.exists():
+        display(Image(filename=str(p)))
 """
             ),
         ]
     ),
-    NB / "05_cnn_from_scratch.ipynb",
+    NB / "05_cnn_and_transfer_learning.ipynb",
 )
 
-# 06 - Transfer
-save(
-    notebook(
-        [
-            md_cell("# 06 — Transfer Learning (ResNet18)\n\nFreeze backbone → train head → fine-tune full network."),
-            code_cell("!python scripts/run_transfer.py --quick"),
-            code_cell(
-                """import json
-from IPython.display import display
-with open(ROOT / 'outputs/metrics/transfer_learning_metrics.json') as f:
-    display(json.load(f))
-"""
-            ),
-        ]
-    ),
-    NB / "06_transfer_learning.ipynb",
-)
-
-print("Notebooks generated in", NB)
+print("Notebooks generated:", NB)

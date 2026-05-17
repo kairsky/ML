@@ -69,7 +69,7 @@ cnn:
   epochs: 30
   batch_size: 64
   learning_rate: 0.001
-  checkpoint_dir: outputs/models/cnn_scratch
+  checkpoint_dir: results/models/cnn_scratch
 
 # Transfer learning
 transfer:
@@ -82,8 +82,8 @@ transfer:
 
 # Output paths
 paths:
-  models: outputs/models
-  plots: outputs/plots
-  metrics: outputs/metrics
-  logs: outputs/logs
+  models: results/models
+  plots: results/plots
+  metrics: results/metrics
+  logs: results/logs
   reports: docs/report

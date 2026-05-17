@@ -30,3 +30,6 @@ Pillow>=10.4.0
 
 # Grad-CAM / interpretability
 opencv-python-headless>=4.10.0
+
+# PDF report generation
+fpdf2>=2.8.0
