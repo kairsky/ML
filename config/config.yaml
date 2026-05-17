@@ -52,6 +52,10 @@ classical_ml:
       weights: ["uniform", "distance"]
       metric: ["euclidean", "minkowski"]
 
+# Dimensionality (same Covertype as classical_ml; viz subsample only for t-SNE/UMAP plots)
+dimensionality:
+  embedding_viz_samples: 3000
+
 # MLP (Fashion-MNIST)
 mlp:
   epochs: 30
@@ -63,6 +67,12 @@ mlp:
   hidden_units: [512, 256, 128]
   dropout_rate: 0.3
   early_stopping_patience: 5
+  # L1/L2 kernel regularization experiment (lambda values)
+  regularization:
+    none: 0.0
+    l2: 0.0001
+    l1: 0.0001
+    l1_l2: 0.0001
 
 # CNN from scratch (CIFAR-10)
 cnn:

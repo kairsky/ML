@@ -172,6 +172,37 @@ class PlotManager:
         plt.close(fig)
         return path
 
+    def plot_regularization_comparison(
+        self,
+        histories: Dict[str, Dict[str, List[float]]],
+        filename: str = "regularization_l1_l2_mse.png",
+    ) -> Path:
+        """Compare L1/L2 runs: cross-entropy loss, MSE (one-hot), and accuracy."""
+        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+        for name, hist in histories.items():
+            label = name.replace("reg_", "")
+            axes[0].plot(hist.get("val_loss", []), label=label)
+            axes[1].plot(hist.get("val_mse_one_hot", []), label=label)
+            axes[2].plot(hist.get("val_accuracy", []), label=label)
+        axes[0].set_title("Val Loss (cross-entropy)")
+        axes[0].set_xlabel("Epoch")
+        axes[0].set_ylabel("Loss")
+        axes[1].set_title("Val MSE (one-hot vs softmax)")
+        axes[1].set_xlabel("Epoch")
+        axes[1].set_ylabel("MSE")
+        axes[2].set_title("Val Accuracy")
+        axes[2].set_xlabel("Epoch")
+        axes[2].set_ylabel("Accuracy")
+        for ax in axes:
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+        fig.suptitle("MLP Regularization: None vs L1 vs L2 vs L1+L2")
+        path = self.output_dir / filename
+        fig.tight_layout()
+        fig.savefig(path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        return path
+
     def plot_decision_tree(
         self,
         tree_estimator,

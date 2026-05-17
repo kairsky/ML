@@ -16,7 +16,8 @@ sys.path.insert(0, str(ROOT))
 from src.classical_ml.evaluator import ModelEvaluator
 from src.classical_ml.trainer import ClassicalMLTrainer
 from src.classical_ml.theory import get_comparison_table
-from src.data.loaders import load_covertype, load_wine_quality, split_train_val_test
+from src.data.loaders import load_wine_quality
+from src.data.project_datasets import get_covertype_splits
 from src.data.preprocessing import build_preprocessor, detect_imbalance
 from src.utils.config import load_config
 from src.utils.logging_utils import get_logger
@@ -134,7 +135,10 @@ def main() -> None:
     X_wine, y_wine = load_wine_quality()
     run_dataset("wine_quality", X_wine, y_wine, config, plots_dir, models_dir, metrics_dir, quick=args.quick)
 
-    X_cov, y_cov = load_covertype(max_samples=config["dataset_b"]["max_samples"])
+    X_train, X_val, X_test, y_train, y_val, y_test = get_covertype_splits(config)
+    import pandas as pd
+    X_cov = pd.concat([X_train, X_val, X_test], ignore_index=True)
+    y_cov = pd.concat([y_train, y_val, y_test], ignore_index=True)
     run_dataset("covertype", X_cov, y_cov, config, plots_dir, models_dir, metrics_dir, quick=args.quick)
 
     print("Classical ML pipeline completed.")

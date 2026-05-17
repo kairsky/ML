@@ -158,25 +158,41 @@ save(
 ## Архитектура
 Вход 784 → скрытые 512-256-128 → BatchNorm → Dropout 0.3 → Softmax(10).
 
+## Функции потерь и метрики
+- **Основной loss:** `sparse_categorical_crossentropy` (классификация).
+- **Доп. метрика MSE:** среднеквадратичная ошибка между one-hot меткой и вектором softmax — показывает «жёсткость» вероятностей.
+
+## Эксперимент L1 / L2
+| Модель | Регуляризатор | λ (типично) |
+|--------|---------------|-------------|
+| none | — | 0 |
+| l2 | `kernel_regularizer L2` | 1e-4 |
+| l1 | `kernel_regularizer L1` | 1e-4 |
+| l1_l2 | `L1L2` | 1e-4 + 1e-4 |
+
+Сравниваются кривые **val_loss**, **val_mse_one_hot**, **val_accuracy** на одном графике.
+
 ## Оптимизаторы
-- **SGD** + momentum — классический, чувствителен к lr
-- **Adam** — адаптивные шаги
-- **RMSprop** — скользящее среднее квадратов градиентов
+SGD, Adam, RMSprop — отдельный блок после регуляризации.
 
 ## Теория
-**Исчезающие градиенты:** насыщение sigmoid/tanh. **BatchNorm:** стабилизация активаций. **LR scheduling:** ReduceLROnPlateau при плато val_loss.
-
-## Регуляризация
-Early stopping, dropout, (опционально) L2 на весах.
+**L2** штрафует большие веса → сглаживание. **L1** даёт разреженные веса. **MSE** на вероятностях дополняет CE при анализе калибровки.
 """
             ),
             code_cell(SETUP + "!python scripts/run_mlp.py --quick"),
             code_cell(
                 SETUP
-                + """from IPython.display import Image, display
-p = ROOT / 'results/plots/mlp/optimizer_comparison.png'
-if p.exists():
-    display(Image(filename=str(p)))
+                + """import pandas as pd
+from IPython.display import Image, display
+
+summary = ROOT / 'results/metrics/mlp_regularization_summary.csv'
+if summary.exists():
+    display(pd.read_csv(summary))
+
+for img in ['regularization_l1_l2_mse.png', 'optimizer_comparison.png']:
+    p = ROOT / 'results/plots/mlp' / img
+    if p.exists():
+        display(Image(filename=str(p)))
 """
             ),
         ]
