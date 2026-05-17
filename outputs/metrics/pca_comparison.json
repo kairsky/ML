@@ -1,0 +1,11 @@
+{
+  "original_dimensions": 54,
+  "pca_components": 42,
+  "variance_retained": 0.95,
+  "accuracy_before": 0.762982689747004,
+  "accuracy_after": 0.7443408788282291,
+  "f1_before": 0.7553469939782013,
+  "f1_after": 0.7363694965611457,
+  "accuracy_delta": -0.018641810918774926,
+  "discussion": "PCA projects data onto orthogonal directions of maximum variance. Retaining 95% variance reduces dimensionality while discarding noise; performance may improve (denoising) or degrade (lost discriminative signal)."
+}

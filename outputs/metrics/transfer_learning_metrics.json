@@ -1,0 +1,8 @@
+{
+  "head_val_accuracy": 0.6905,
+  "test_accuracy": 0.8615,
+  "test_loss": 0.4071753049850464,
+  "param_count": 11181642,
+  "train_time_head_sec": 200.68365097045898,
+  "train_time_finetune_sec": 347.944224357605
+}

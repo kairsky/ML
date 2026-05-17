@@ -1,0 +1,7 @@
+Algorithm,Training,Inference,Key hyperparameters,Best use case
+k-NN,"O(1) — lazy learner, stores training data.","O(n·d) per query for n training samples, d features.","n_neighbors (k), weights, metric",Small datasets
+Decision Tree,O(n·d·log n) per tree (greedy splits).,O(depth) ≈ O(log n) per sample.,"max_depth, min_samples_split, min_samples_leaf",Tabular data with interactions
+Random Forest,O(T·n·d·log n) for T trees.,O(T·depth) per sample.,"n_estimators, max_depth, max_features",General tabular classification
+SVM,O(n²) to O(n³) depending on solver.,O(n_sv·d) for number of support vectors n_sv.,"C, kernel, gamma",Medium-sized datasets
+Logistic Regression,O(n·d·iterations) — convex optimization.,O(d) per sample.,"C (inverse regularization), penalty, solver",Baseline linear classifier
+Naive Bayes,O(n·d) — count/means per class.,O(c·d) for c classes.,"var_smoothing (Gaussian), alpha (Multinomial), binarize",Text classification

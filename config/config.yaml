@@ -1,0 +1,89 @@
+# Global reproducibility
+random_seed: 42
+
+# Data splits (train / val / test)
+split_ratios:
+  train: 0.70
+  val: 0.15
+  test: 0.15
+
+# Dataset A: UCI Wine Quality (tabular)
+dataset_a:
+  name: wine_quality
+  source: openml
+  openml_id: 287
+  target_column: quality
+
+# Dataset B: Covertype (multiclass, >=1000 samples)
+dataset_b:
+  name: covertype
+  source: sklearn
+  max_samples: 15000
+  target_column: Cover_Type
+
+# Image datasets
+fashion_mnist:
+  data_dir: data/fashion_mnist
+
+cifar10:
+  data_dir: data/cifar10
+
+# Classical ML
+classical_ml:
+  cv_folds: 5
+  n_jobs: -1
+  pca_variance_threshold: 0.95
+  grid_search:
+    logistic_regression:
+      C: [0.01, 0.1, 1.0, 10.0]
+      penalty: ["l2"]
+      solver: ["lbfgs", "saga"]
+      max_iter: [1000]
+    random_forest:
+      n_estimators: [100, 200]
+      max_depth: [10, 20, null]
+      min_samples_split: [2, 5]
+    svm:
+      C: [0.1, 1.0, 10.0]
+      kernel: ["rbf", "linear"]
+      gamma: ["scale", "auto"]
+    knn:
+      n_neighbors: [3, 5, 7, 11]
+      weights: ["uniform", "distance"]
+      metric: ["euclidean", "minkowski"]
+
+# MLP (Fashion-MNIST)
+mlp:
+  epochs: 30
+  batch_size: 128
+  learning_rates:
+    sgd: 0.01
+    adam: 0.001
+    rmsprop: 0.001
+  hidden_units: [512, 256, 128]
+  dropout_rate: 0.3
+  early_stopping_patience: 5
+
+# CNN from scratch (CIFAR-10)
+cnn:
+  epochs: 30
+  batch_size: 64
+  learning_rate: 0.001
+  checkpoint_dir: outputs/models/cnn_scratch
+
+# Transfer learning
+transfer:
+  backbone: resnet18
+  epochs_head: 10
+  epochs_finetune: 20
+  batch_size: 32
+  learning_rate_head: 0.001
+  learning_rate_finetune: 0.0001
+
+# Output paths
+paths:
+  models: outputs/models
+  plots: outputs/plots
+  metrics: outputs/metrics
+  logs: outputs/logs
+  reports: docs/report
